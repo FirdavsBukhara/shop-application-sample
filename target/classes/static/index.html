@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Главная</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Магазин</a>
+    <button class="btn btn-outline-light" id="logoutBtn">Выйти</button>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <h3>Категории</h3>
+  <ul id="categories" class="list-group"></ul>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Сначала войдите в систему");
+      window.location.href = "/login.html";
+      return;
+    }
+
+    loadCategories();
+
+    async function loadCategories() {
+      try {
+        const response = await fetch("http://localhost:8080/api/categories", {
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (response.status === 401) {
+          alert("Сессия истекла. Войдите снова.");
+          localStorage.removeItem("token");
+          window.location.href = "/login.html";
+          return;
+        }
+
+        const categories = await response.json();
+        const list = document.getElementById("categories");
+        list.innerHTML = "";
+        categories.forEach(cat => {
+          const li = document.createElement("li");
+          li.className = "list-group-item";
+          li.textContent = cat.name;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        alert("Ошибка при загрузке категорий");
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "/login.html";
+    });
+  });
+</script>
+</body>
+</html>
